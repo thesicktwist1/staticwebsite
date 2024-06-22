@@ -10,14 +10,23 @@ from inline_markdown import text_to_textnodes
 import re
 import math
 
+
+def extract_title(markdown):
+    markdown_splitted = markdown.split("\n")
+    for markdowns in markdown_splitted:
+        if markdowns.startswith("# "):
+            return markdowns[2:]
+    else:
+        raise Exception("All pages need a single h1 header.")
+
 def markdown_to_blocks(markdown):
     blocks_list = []
     markdown_splitted = markdown.split("\n\n")
-    for markdown in markdown_splitted:
-        if markdown == "":
+    for markdowns in markdown_splitted:
+        if markdowns == "":
             continue 
-        markdown = markdown.strip()
-        blocks_list.append(markdown)
+        markdowns = markdown.strip()
+        blocks_list.append(markdowns)
     return blocks_list
 
 def block_to_block_type(block):

@@ -2,14 +2,30 @@ from textnode import TextNode
 import os
 import shutil
 from copy_static import copy_static
-src_path = "/root/workspace/github.com/thesicktwist1/staticwebsite/src"
-dst_path = "/root/workspace/github.com/thesicktwist1/staticwebsite/public"
+from inline_blocks import extract_title
+from copy_static import copy_static
+from generate_page import generate_page
+
+dir_path_static = "./static"
+dir_path_public = "./public"
+dir_path_content = "./content"
+template_path = "./template.html"
+
 
 def main():
-    if os.path.exists(dst_path):
-        shutil.rmtree(dst_path)
-    copy_static(src_path,dst_path)
+    print("Deleting public directory...")
+    if os.path.exists(dir_path_public):
+        shutil.rmtree(dir_path_public)
 
+    print("Copying static files to public directory...")
+    copy_static(dir_path_static, dir_path_public)
+
+    print("Generating page...")
+    generate_page(
+        os.path.join(dir_path_content, "index.md"),
+        template_path,
+        os.path.join(dir_path_public, "index.html"),
+    )
 
 
  
