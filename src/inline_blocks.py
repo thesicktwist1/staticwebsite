@@ -4,19 +4,10 @@ block_type_code = "code"
 block_type_quote = "quote"
 block_type_unordered_list = "unordered_list"
 block_type_ordered_list = "ordered_list"
-
+from textnode import text_node_to_html_node
 from htmlnode import LeafNode,ParentNode,HTMLNode
 from inline_markdown import text_to_textnodes
-import re
 
-
-def extract_title(markdown):
-    markdown_splitted = markdown.split("\n")
-    for markdowns in markdown_splitted:
-        if markdowns.startswith("# "):
-            return markdowns[2:]
-    else:
-        raise Exception("All pages need a single h1 header.")
 
 def markdown_to_blocks(markdown):
     blocks_list = []
@@ -30,11 +21,16 @@ def markdown_to_blocks(markdown):
 
 def block_to_block_type(block):
     lines = block.split("\n")
-    heading_pattern = r"^(#{1,6} )"
-    list_pattern = r"^(\d+\. )"
-    if re.findall(heading_pattern, block):
+    if (
+        block.startswith("# ")
+        or block.startswith("## ")
+        or block.startswith("### ")
+        or block.startswith("#### ")
+        or block.startswith("##### ")
+        or block.startswith("###### ")
+    ):
         return block_type_heading
-    if len(lines) > 1 and block.startswith("```") and block.endswith("```"):
+    if len(lines) > 1 and lines[0].startswith("```") and lines[-1].startswith("```"):
         return block_type_code
     if block.startswith(">"):
         for line in lines:
@@ -45,40 +41,47 @@ def block_to_block_type(block):
         for line in lines:
             if not line.startswith("* "):
                 return block_type_paragraph
-        return block_type_unordered_list 
-    if re.findall(list_pattern,block) and not block.startswith("0"):
+        return block_type_unordered_list
+    if block.startswith("- "):
+        for line in lines:
+            if not line.startswith("- "):
+                return block_type_paragraph
+        return block_type_unordered_list
+    if block.startswith("1. "):
+        i = 1
+        for line in lines:
+            if not line.startswith(f"{i}. "):
+                return block_type_paragraph
+            i += 1
         return block_type_ordered_list
-    else:
-        return block_type_paragraph
+    return block_type_paragraph
 
 def to_child(text):
     text_node = text_to_textnodes(text)
     children = []
     for text in text_node:
-        html_node = text.text_node_to_html_node()
+        html_node = text_node_to_html_node(text)
         children.append(html_node)
     return children
 
 def ulist_to_html_node(block):
-    lines = block.split("\n")
-    ulist = []
-    for line in lines:
-        if line.startswith('- '): 
-            text = line[2:].strip()  
-            children = to_child(text)
-            ulist.append(ParentNode(tag="li", children=children))
-    return ParentNode(tag="ul",children=ulist)
+    items = block.split("\n")
+    html_items = []
+    for item in items:
+        text = item[2:]
+        children = to_child(text)
+        html_items.append(ParentNode("li", children))
+    return ParentNode("ul", html_items)
 
 
 def olist_to_html_node(block):
-    lines = block.split("\n")
-    olist = []
-    for line in lines:
-        if line[:1].isdigit() and line[1:3] == '. ':  
-            text = line[3:].strip()
-            children = to_child(text)
-            olist.append(ParentNode(tag="li", children=children))
-    return ParentNode(tag="ol",children=olist)
+    items = block.split("\n")
+    html_items = []
+    for item in items:
+        text = item[3:]
+        children = to_child(text)
+        html_items.append(ParentNode("li", children))
+    return ParentNode("ol", html_items)
 
 def quote_to_html_node(block):
     lines = block.split("\n")
@@ -99,14 +102,17 @@ def code_to_html_node(block):
         raise ValueError("Invalide code")
           
 def heading_to_html_node(block):
-    split = block.split(" ")
-    count = split[0].count("#")
-    if count > 6:
-        raise ValueError("Invalid heading")
-    else:
-        lines = block.lstrip("# ")
-        new_lines = to_child(lines)
-        return ParentNode(tag=f"h{count}",children=new_lines)
+    level = 0
+    for char in block:
+        if char == "#":
+            level += 1
+        else:
+            break
+    if level + 1 >= len(block):
+        raise ValueError(f"Invalid heading level: {level}")
+    text = block[level + 1 :]
+    children = to_child(text.strip())
+    return ParentNode(f"h{level}", children)
     
 def paragraph_to_html_node(block):
     lines = block.split("\n")
@@ -120,7 +126,7 @@ def markdown_to_html(markdown):
     for markdown in new_markdown:
         html_node = block_to_html_node(markdown)
         nodes.append(html_node)
-    return ParentNode(tag="div", children=nodes)
+    return ParentNode("div", nodes, None)
 
 def block_to_html_node(block):
     block_type = block_to_block_type(block)

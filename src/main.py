@@ -1,9 +1,7 @@
 from textnode import TextNode
 import os
 import shutil
-from copy_static import copy_static
-from inline_blocks import extract_title
-from copy_static import copy_static
+from copy_static import copy_files_recursive
 from generate_page import generate_page
 
 dir_path_static = "./static"
@@ -18,7 +16,7 @@ def main():
         shutil.rmtree(dir_path_public)
 
     print("Copying static files to public directory...")
-    copy_static(dir_path_static, dir_path_public)
+    copy_files_recursive(dir_path_static, dir_path_public)
 
     print("Generating page...")
     generate_page(
@@ -26,9 +24,6 @@ def main():
         template_path,
         os.path.join(dir_path_public, "index.html"),
     )
-
-
- 
 
 main()
 

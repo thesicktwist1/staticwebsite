@@ -1,11 +1,11 @@
 
 import os 
-from inline_blocks import extract_title, markdown_to_html
+from inline_blocks import markdown_to_html
 
 
 
 def generate_page(from_path, template_path, dest_path):
-    print(f"Generating page from {from_path} to {dest_path} using {template_path}.")
+    print(f" * {from_path} {template_path} -> {dest_path}")
     from_file = open(from_path, "r")
     markdown_content = from_file.read()
     from_file.close()
@@ -24,9 +24,12 @@ def generate_page(from_path, template_path, dest_path):
     dest_dir_path = os.path.dirname(dest_path)
     if dest_dir_path != "":
         os.makedirs(dest_dir_path, exist_ok=True)
-        
-    with open(dest_path, "w") as to_file:
-        to_file.write(template)
+    to_file = open(dest_path, "w")
+    to_file.write(template)
 
-
-    
+def extract_title(markdown):
+    markdown_splitted = markdown.split("\n")
+    for markdowns in markdown_splitted:
+        if markdowns.startswith("# "):
+            return markdowns[2:]  
+    raise Exception("All pages need a single h1 header.")
