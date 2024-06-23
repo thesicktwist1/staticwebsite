@@ -8,7 +8,6 @@ block_type_ordered_list = "ordered_list"
 from htmlnode import LeafNode,ParentNode,HTMLNode
 from inline_markdown import text_to_textnodes
 import re
-import math
 
 
 def extract_title(markdown):
@@ -64,9 +63,10 @@ def ulist_to_html_node(block):
     lines = block.split("\n")
     ulist = []
     for line in lines:
-        text = line[2:]
-        children = to_child(text)
-        ulist.append(ParentNode(tag="li",children=children))
+        if line.startswith('- '): 
+            text = line[2:].strip()  
+            children = to_child(text)
+            ulist.append(ParentNode(tag="li", children=children))
     return ParentNode(tag="ul",children=ulist)
 
 
@@ -74,9 +74,10 @@ def olist_to_html_node(block):
     lines = block.split("\n")
     olist = []
     for line in lines:
-        text = line[3:]
-        children = to_child(text)
-        olist.append(ParentNode(tag="li",children=children))
+        if line[:1].isdigit() and line[1:3] == '. ':  
+            text = line[3:].strip()
+            children = to_child(text)
+            olist.append(ParentNode(tag="li", children=children))
     return ParentNode(tag="ol",children=olist)
 
 def quote_to_html_node(block):
