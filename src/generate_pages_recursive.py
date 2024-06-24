@@ -1,8 +1,20 @@
 
 import os 
-from inline_blocks import markdown_to_html
+import shutil
+from inline_blocks import markdown_to_html_node
+from pathlib import Path
 
 
+
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    for filename in os.listdir(dir_path_content):
+        from_path = os.path.join(dir_path_content, filename)
+        dest_path = os.path.join(dest_dir_path, filename)
+        if os.path.isfile(from_path):
+            dest_path = Path(dest_path).with_suffix(".html")
+            generate_page(from_path, template_path, dest_path)
+        else:
+            generate_pages_recursive(from_path, template_path, dest_path)
 
 def generate_page(from_path, template_path, dest_path):
     print(f" * {from_path} {template_path} -> {dest_path}")
@@ -14,7 +26,7 @@ def generate_page(from_path, template_path, dest_path):
     template = template_file.read()
     template_file.close()
 
-    node = markdown_to_html(markdown_content)
+    node = markdown_to_html_node(markdown_content)
     html = node.to_html()
 
     title = extract_title(markdown_content)
@@ -26,6 +38,7 @@ def generate_page(from_path, template_path, dest_path):
         os.makedirs(dest_dir_path, exist_ok=True)
     to_file = open(dest_path, "w")
     to_file.write(template)
+ 
 
 def extract_title(markdown):
     markdown_splitted = markdown.split("\n")
